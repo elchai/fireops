@@ -3,12 +3,16 @@
    State, persistence, routing, auth, navigation, render orchestrator
    ============================================================ */
 
-// === Global state ===
 window.FireOpsState = {
   stations: [],
   incidents: [],
   units: [],
-  // future: firefighters, apparatus, equipment, training, shifts, op_log
+  firefighters: [],
+  apparatus: [],
+  shifts: [],
+  equipment: [],
+  trainings: [],
+  op_log: []
 };
 
 window.FireOpsApp = (function() {
@@ -22,9 +26,7 @@ window.FireOpsApp = (function() {
   function loadState() {
     try {
       const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
-      if (raw) {
-        Object.assign(FireOpsState, JSON.parse(raw));
-      }
+      if (raw) Object.assign(FireOpsState, JSON.parse(raw));
     } catch (e) { console.warn('loadState failed', e); }
 
     if (!FireOpsState.stations || FireOpsState.stations.length === 0) {
@@ -57,7 +59,7 @@ window.FireOpsApp = (function() {
     } catch (e) { console.warn('saveAuth failed', e); }
   }
 
-  // === Auth ===
+  // === Auth modal ===
   function showAuthModal() {
     populateAuthStations();
     document.getElementById('auth-modal').classList.add('visible');
@@ -79,17 +81,14 @@ window.FireOpsApp = (function() {
     const name = document.getElementById('login-name').value.trim();
     const role = document.getElementById('login-role').value;
     const stationId = document.getElementById('login-station').value;
-    if (!name) {
-      toast('⚠ נא להזין שם משתמש', 'warning');
-      return;
-    }
+    if (!name) { toast('⚠ נא להזין שם משתמש', 'warning'); return; }
     currentUser = { name, role, stationId, loggedAt: Date.now() };
     currentStationId = stationId;
     saveAuth();
     hideAuthModal();
     renderUserInfo();
     populateStationSelector();
-    FireOpsDispatch.init();
+    if (FireOpsDispatch.init) FireOpsDispatch.init();
     toast(`⚡ שלום ${name} — ${CONFIG.getRole(role).name_he}`, 'success');
   }
 
@@ -118,11 +117,27 @@ window.FireOpsApp = (function() {
       currentUser.stationId = currentStationId;
       saveAuth();
     }
-    if (FireOpsDispatch.onStationChange) FireOpsDispatch.onStationChange();
+    // Notify all modules of station change
+    ['Dispatch','Firefighters','Apparatus','Scheduling','Equipment','Training','OpLog','Reports','Settings'].forEach(mod => {
+      const m = window[`FireOps${mod}`];
+      if (m && m.onStationChange) m.onStationChange();
+    });
     toast(`🚒 עבר/ת ל-${getCurrentStation().name}`);
   }
 
-  // === Navigation ===
+  // === Module registry (lazy init per page) ===
+  const MODULES = {
+    'dispatch':     () => FireOpsDispatch,
+    'firefighters': () => FireOpsFirefighters,
+    'apparatus':    () => FireOpsApparatus,
+    'scheduling':   () => FireOpsScheduling,
+    'equipment':    () => FireOpsEquipment,
+    'training':     () => FireOpsTraining,
+    'op-log':       () => FireOpsOpLog,
+    'reports':      () => FireOpsReports,
+    'settings':     () => FireOpsSettings
+  };
+
   function navigateTo(page) {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
@@ -134,13 +149,10 @@ window.FireOpsApp = (function() {
 
     currentPage = page;
 
-    if (page === 'dispatch') {
-      // המפה צריכה invalidateSize אחרי שהדף שלה הוצג שוב
-      setTimeout(() => {
-        if (window.FireOpsDispatch && window.FireOpsDispatch._map) {
-          // no-op — שמור על דפוס נקי, ה-map כבר ב-DOM
-        }
-      }, 50);
+    const modGetter = MODULES[page];
+    if (modGetter) {
+      const mod = modGetter();
+      if (mod && mod.init) mod.init();
     }
   }
 
@@ -148,12 +160,9 @@ window.FireOpsApp = (function() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
-        if (!page) return;
+        if (!page || currentPage === page) return;
         FireOpsSounds.uiClick();
         navigateTo(page);
-        if (page !== 'dispatch') {
-          toast(`🔀 ${btn.title} · מודול בפיתוח`);
-        }
       });
     });
   }
@@ -168,15 +177,13 @@ window.FireOpsApp = (function() {
     setInterval(tick, 1000);
   }
 
-  // === Shift indicator ===
   function updateShiftIndicator() {
     const now = new Date();
     const hour = now.getHours();
     const isDayShift = hour >= 7 && hour < 19;
-    const txt = isDayShift
+    document.getElementById('shift-indicator').textContent = isDayShift
       ? 'משמרת יום · 07:00–19:00'
       : 'משמרת לילה · 19:00–07:00';
-    document.getElementById('shift-indicator').textContent = txt;
   }
 
   // === Toast ===
@@ -187,6 +194,53 @@ window.FireOpsApp = (function() {
     document.getElementById('toasts').appendChild(t);
     setTimeout(() => t.style.opacity = '0', 3000);
     setTimeout(() => t.remove(), 3500);
+  }
+
+  // === Generic modal ===
+  function openModal(contentHtml, options = {}) {
+    const backdrop = document.getElementById('generic-modal');
+    const content = document.getElementById('generic-modal-content');
+    content.innerHTML = contentHtml;
+    content.classList.toggle('modal-lg', !!options.large);
+    backdrop.classList.add('visible');
+    if (options.onMount) options.onMount(content);
+  }
+
+  function closeModal() {
+    document.getElementById('generic-modal').classList.remove('visible');
+    document.getElementById('generic-modal-content').innerHTML = '';
+  }
+
+  // Close generic modal on backdrop click
+  document.addEventListener('click', e => {
+    if (e.target.id === 'generic-modal') closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // === Op-log helper: every module can log events ===
+  function logEvent(category, urgency, text, extra = {}) {
+    FireOpsState.op_log = FireOpsState.op_log || [];
+    FireOpsState.op_log.unshift({
+      id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      station_id: getCurrentStation()?.id,
+      timestamp: Date.now(),
+      category,
+      urgency,
+      actor: currentUser?.name || 'system',
+      text,
+      ...extra
+    });
+    // Cap at 500 to avoid bloat
+    if (FireOpsState.op_log.length > 500) FireOpsState.op_log.length = 500;
+    saveState();
+    if (FireOpsOpLog && FireOpsOpLog.refreshIfActive) FireOpsOpLog.refreshIfActive();
+  }
+
+  // === Helpers exposed on FireOpsApp ===
+  function uid(prefix = 'id') {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
   }
 
   // === Init ===
@@ -222,11 +276,15 @@ window.FireOpsApp = (function() {
     init,
     saveState,
     toast,
+    openModal,
+    closeModal,
     navigateTo,
     getCurrentStation,
-    getCurrentUser: () => currentUser
+    getCurrentUser: () => currentUser,
+    getCurrentStationId: () => currentStationId,
+    logEvent,
+    uid
   };
 })();
 
-// Boot
 window.addEventListener('DOMContentLoaded', () => FireOpsApp.init());

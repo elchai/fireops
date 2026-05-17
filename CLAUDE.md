@@ -19,16 +19,26 @@
 
 ```
 index.html              ← shell, sidebar, page container, modals, scripts loaded in order
-style.css               ← core: topbar, sidebar, panels, buttons, modal, toast
+style.css               ← core + shared module components (tabs, KPI, matrix, timeline, data-grid)
 style-dispatch.css      ← dispatch-specific: incident card, unit card, map, leaflet overrides
 config.js               ← NFIRS codes (HE), apparatus types, run cards, roles, stations
 firebase-config.js      ← stub (disabled). FireOpsFirebase API for future
 sounds.js               ← FireOpsSounds: incidentReceived, unitAcknowledge, uiClick, criticalAlert
 dispatch.js             ← FireOpsDispatch: map, markers, render, spawn
-app.js                  ← FireOpsApp: state, persistence, auth, nav, clock, toast. Boots on DOMContentLoaded.
+firefighters.js         ← FireOpsFirefighters: roster CRUD per station
+apparatus.js            ← FireOpsApparatus: fleet CRUD per station
+scheduling.js           ← FireOpsScheduling: weekly grid, day × apparatus × positions
+equipment.js            ← FireOpsEquipment: items per apparatus, daily check flow
+training.js             ← FireOpsTraining: matrix view firefighters × certs
+op-log.js               ← FireOpsOpLog: timeline feed, filter, CSV export
+reports.js              ← FireOpsReports: KPI cards + bar chart
+settings.js             ← FireOpsSettings: tabs (stations / run cards / system)
+app.js                  ← FireOpsApp: state, persistence, auth, nav, clock, toast, openModal, logEvent
 sw.js                   ← PWA cache (versioned)
 manifest.json           ← PWA metadata
 ```
+
+**Module pattern**: כל מודול הוא IIFE שמייצא `init()`, `render()`, `onStationChange()`. ב-app.js יש `MODULES` registry שמפעיל את הnit כשנכנסים לדף. seed דמו רץ פעם אחת בכל מודול אם ה-state ריק.
 
 **סדר טעינת scripts** ב-`index.html`: Leaflet → config → firebase-config → sounds → dispatch → app. אל תשנה — `app.init()` בסוף הוא הטריגר.
 
@@ -77,13 +87,34 @@ manifest.json           ← PWA metadata
 ## Future Phases
 
 Phase 1 (Foundation) ✅ — shell, auth, dispatch view דמו, multi-station, PWA
-Phase 2 — Roster & Apparatus (firefighters, apparatus CRUD)
-Phase 3 — Scheduling (shifts פשוט, אילוצים בסיסיים)
-Phase 4 — Equipment & Daily Checks (PDF, signatures)
-Phase 5 — Training Matrix
-Phase 6 — Dispatch / CAD מלא (incident intake form, Run Cards engine, timeline)
-Phase 7 — Mobile Responder App (Accept/Decline ל-incidents)
-Phase 8 — GIS Layers (hydrants, preplans)
-Phase 9 — Reports & יומן מבצעי
+Phase 2 (Roster) ✅ MVP — firefighters CRUD
+Phase 2b (Apparatus) ✅ MVP — apparatus CRUD
+Phase 3 (Scheduling) ✅ MVP — weekly grid, position assignment, basic validation
+Phase 4 (Equipment) ✅ MVP — per-rig items + daily check button
+Phase 5 (Training) ✅ MVP — matrix view, cert expiry tracking
+Phase 9a (Op-Log) ✅ MVP — timeline + CSV export
+Phase 9b (Reports) ✅ MVP — 8 KPI cards + bar chart
+Settings ✅ MVP — stations / run cards (read-only) / system
+
+**עדיין לא נבנה:**
+- Phase 4 advanced — PDF export of equipment checks with canvas signature
+- Phase 5 advanced — JPR mapping, hours tracking
+- Phase 3 advanced — constraints engine (date_block, min_rest, max_consecutive), shift trades
+- Phase 6 — full CAD: incident intake form, Run Cards engine triggering recommendations, timeline NFIRS
+- Phase 7 — Mobile responder app (Accept/Decline incidents from phone)
+- Phase 8 — GIS layers (hydrants, preplans, response zones)
+- Settings — editable Run Cards, user management
+
+## Patterns to follow for future modules
+
+- IIFE export pattern: `window.FireOpsX = (function() { let initialized = false; function init() {...} function render() {...} return { init, render, onStationChange }; })();`
+- Seed demo data on first init if state is empty
+- Use `FireOpsApp.uid('prefix')` for IDs
+- Use `FireOpsApp.openModal(html, { onMount })` for forms
+- Use `FireOpsApp.toast(msg, type)` for notifications
+- Call `FireOpsApp.saveState()` after every state mutation (it's debounced)
+- Call `FireOpsApp.logEvent(category, urgency, text)` after significant actions — gets picked up by op-log automatically
+- Always filter by `FireOpsApp.getCurrentStation()?.id` in renders
+- Implement `onStationChange()` to re-render on station switch
 
 ראה תוכנית מקורית: `C:\Users\User\.claude\plans\temporal-squishing-globe.md`.

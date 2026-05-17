@@ -2,7 +2,7 @@
    FireOps — Service Worker (PWA)
    ============================================================ */
 
-const CACHE_NAME = 'fireops-v1';
+const CACHE_NAME = 'fireops-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -12,6 +12,14 @@ const ASSETS = [
   './firebase-config.js',
   './sounds.js',
   './dispatch.js',
+  './firefighters.js',
+  './apparatus.js',
+  './scheduling.js',
+  './equipment.js',
+  './training.js',
+  './op-log.js',
+  './reports.js',
+  './settings.js',
   './app.js',
   './manifest.json'
 ];

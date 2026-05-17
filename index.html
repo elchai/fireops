@@ -55,7 +55,7 @@
   <!-- Page container -->
   <main class="page-container">
 
-    <!-- Dispatch page -->
+    <!-- Dispatch page (fully functional) -->
     <div class="page page-dispatch active" id="page-dispatch">
       <section class="panel glass incidents-panel">
         <h2>אירועים פעילים <span class="badge pulse" id="incidents-badge">0</span></h2>
@@ -69,7 +69,7 @@
         <div class="map-overlay-top">
           <div class="overlay-stat">
             <span class="label">תגובה ממוצעת</span>
-            <span class="value" id="stat-avg-response">--:--</span>
+            <span class="value" id="stat-avg-response">04:32</span>
           </div>
           <div class="overlay-stat">
             <span class="label">יחידות בשטח</span>
@@ -88,78 +88,15 @@
       </section>
     </div>
 
-    <!-- Placeholder pages -->
-    <div class="page page-placeholder" id="page-firefighters">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">👨‍🚒</div>
-        <h1>ניהול כבאים</h1>
-        <p>רוסטר לוחמי אש פר תחנה, תפקידים, סיווגים, פרטי קשר</p>
-        <span class="phase-badge">PHASE 2</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-apparatus">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">🚒</div>
-        <h1>ניהול רכבים</h1>
-        <p>כבאיות, סולמות, רכבי חילוץ — מיקום, איוש, סטטוס</p>
-        <span class="phase-badge">PHASE 2</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-equipment">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">🛠️</div>
-        <h1>ניהול ציוד</h1>
-        <p>ציוד פר רכב, בדיקות יומיות, החתמה דיגיטלית, ייצוא PDF</p>
-        <span class="phase-badge">PHASE 4</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-training">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">🏅</div>
-        <h1>אימוני לוחמי אש</h1>
-        <p>מטריצת סיווגים — כיבוי מבנה, חילוץ, חומ"ס, סולמות, SCBA, חובש כיבוי</p>
-        <span class="phase-badge">PHASE 5</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-scheduling">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">📅</div>
-        <h1>שיבוץ למשמרות</h1>
-        <p>משמרות 24/48 · אילוצים בסיסיים · איוש apparatus</p>
-        <span class="phase-badge">PHASE 3</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-op-log">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">📋</div>
-        <h1>יומן מבצעי</h1>
-        <p>פיד כרונולוגי של אירועים, הזנקות, סטטוסים · סינון וייצוא</p>
-        <span class="phase-badge">PHASE 6</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-reports">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">📊</div>
-        <h1>דוחות ואנליטיקה</h1>
-        <p>תגובה ממוצעת · עמידה בתקנים · דוחות NFIRS</p>
-        <span class="phase-badge">PHASE 9</span>
-      </div>
-    </div>
-
-    <div class="page page-placeholder" id="page-settings">
-      <div class="placeholder-content glass">
-        <div class="placeholder-icon">⚙️</div>
-        <h1>הגדרות מערכת</h1>
-        <p>תחנות · משתמשים · הרשאות · Run Cards · הגדרות תצוגה</p>
-        <span class="phase-badge">ALL PHASES</span>
-      </div>
-    </div>
+    <!-- Standard module pages (filled by JS on first navigation) -->
+    <div class="page page-standard" id="page-firefighters"></div>
+    <div class="page page-standard" id="page-apparatus"></div>
+    <div class="page page-standard" id="page-equipment"></div>
+    <div class="page page-standard" id="page-training"></div>
+    <div class="page page-standard" id="page-scheduling"></div>
+    <div class="page page-standard" id="page-op-log"></div>
+    <div class="page page-standard" id="page-reports"></div>
+    <div class="page page-standard" id="page-settings"></div>
 
   </main>
 
@@ -176,7 +113,6 @@
     <div class="modal-body">
       <label class="form-label">שם משתמש</label>
       <input type="text" class="form-input" id="login-name" placeholder="לדוגמה: דוד כהן" autocomplete="name">
-
       <label class="form-label">תפקיד</label>
       <select class="form-input" id="login-role">
         <option value="dispatcher">מוקדן</option>
@@ -187,13 +123,16 @@
         <option value="equipment_manager">מנהל ציוד</option>
         <option value="viewer">צופה</option>
       </select>
-
       <label class="form-label">תחנה</label>
       <select class="form-input" id="login-station"></select>
-
       <button class="cta-dispatch" id="btn-login">⚡ כניסה למערכת</button>
     </div>
   </div>
+</div>
+
+<!-- ============== GENERIC MODAL ============== -->
+<div class="modal-backdrop" id="generic-modal">
+  <div class="modal glass" id="generic-modal-content"></div>
 </div>
 
 <!-- ============== TOAST CONTAINER ============== -->
@@ -205,6 +144,14 @@
 <script src="firebase-config.js"></script>
 <script src="sounds.js"></script>
 <script src="dispatch.js"></script>
+<script src="firefighters.js"></script>
+<script src="apparatus.js"></script>
+<script src="scheduling.js"></script>
+<script src="equipment.js"></script>
+<script src="training.js"></script>
+<script src="op-log.js"></script>
+<script src="reports.js"></script>
+<script src="settings.js"></script>
 <script src="app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
