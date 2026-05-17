@@ -1,12 +1,28 @@
 /* ============================================================
    FireOps — Web Audio Sound Effects
    All sounds synthesized in-browser (no MP3 downloads)
+   Disabled by default — user toggles via topbar sound button
    ============================================================ */
 
 window.FireOpsSounds = (function() {
   let ctx;
+  let enabled = false;
+  const PREF_KEY = 'fireOpsSoundEnabled_v1';
+
+  function loadPref() {
+    try { enabled = localStorage.getItem(PREF_KEY) === '1'; }
+    catch (e) { enabled = false; }
+  }
+
+  function setEnabled(b) {
+    enabled = !!b;
+    try { localStorage.setItem(PREF_KEY, enabled ? '1' : '0'); } catch (e) {}
+  }
+
+  function isEnabled() { return enabled; }
 
   function getCtx() {
+    if (!enabled) return null;
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return null;
@@ -20,7 +36,6 @@ window.FireOpsSounds = (function() {
     const c = getCtx(); if (!c) return;
     const now = c.currentTime;
 
-    // Low boom — תופי ברק
     const boom = c.createOscillator();
     const boomGain = c.createGain();
     boom.frequency.setValueAtTime(90, now);
@@ -30,7 +45,6 @@ window.FireOpsSounds = (function() {
     boom.connect(boomGain).connect(c.destination);
     boom.start(now); boom.stop(now + 0.35);
 
-    // 3 alert chimes
     for (let i = 0; i < 3; i++) {
       const t = now + 0.4 + i * 0.16;
       const osc = c.createOscillator();
@@ -73,7 +87,6 @@ window.FireOpsSounds = (function() {
   }
 
   function criticalAlert() {
-    // Escalating siren-like swell (used for 2nd alarm and up)
     const c = getCtx(); if (!c) return;
     const now = c.currentTime;
     const osc = c.createOscillator();
@@ -89,5 +102,8 @@ window.FireOpsSounds = (function() {
     osc.start(now); osc.stop(now + 1.0);
   }
 
-  return { incidentReceived, unitAcknowledge, uiClick, criticalAlert };
+  return {
+    incidentReceived, unitAcknowledge, uiClick, criticalAlert,
+    loadPref, setEnabled, isEnabled
+  };
 })();

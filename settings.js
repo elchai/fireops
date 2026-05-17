@@ -27,6 +27,7 @@ window.FireOpsSettings = (function() {
         <div class="tabs">
           <button class="tab active" data-tab="stations">תחנות</button>
           <button class="tab" data-tab="runcards">Run Cards</button>
+          <button class="tab" data-tab="tactical">טקטי</button>
           <button class="tab" data-tab="system">מערכת</button>
         </div>
         <div class="module-body" id="set-body"></div>
@@ -47,7 +48,118 @@ window.FireOpsSettings = (function() {
     if (!body) return;
     if (activeTab === 'stations') renderStations(body);
     else if (activeTab === 'runcards') renderRunCards(body);
+    else if (activeTab === 'tactical') renderTactical(body);
     else renderSystem(body);
+  }
+
+  // === Tactical tab — demo timing for aircraft + ground vehicles ===
+  function renderTactical(body) {
+    const settings = FireOpsState.tactical_settings || { aircraft_demo_seconds: 25, ground_demo_seconds: 12 };
+    const station = FireOpsApp.getCurrentStation();
+    const base = CONFIG.AIRBASES[0];
+
+    const flightInfo = window.FireOpsTactical
+      ? FireOpsTactical.getRealFlightTime(station.lat, station.lng, 'at802')
+      : { distKm: 0, fullTripMin: 0, aircraftName: 'AT-802F', speed: 250 };
+
+    const realSpeedRatio = (flightInfo.fullTripMin * 60 / settings.aircraft_demo_seconds);
+
+    body.innerHTML = `
+      <p style="color: var(--text-dim); margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+        זמני הטיסה והנסיעה בהדגמה מצוינים בשניות. ערכי ברירת המחדל אופטימליים לצפייה.
+        בכל מקרה, ה<strong>זמנים הריאליים</strong> מחושבים אוטומטית מהמרחק במפה ומהירות הרכב/מטוס.
+      </p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card glass">
+          <span class="kpi-label">מרחק מבסיס מגידו</span>
+          <span class="kpi-value">${flightInfo.distKm.toFixed(1)}<small style="font-size:18px;"> ק"מ</small></span>
+          <span class="kpi-trend">${base.name} → ${station.name}</span>
+        </div>
+        <div class="kpi-card glass">
+          <span class="kpi-label">זמן טיסה ריאלי</span>
+          <span class="kpi-value yellow">${flightInfo.fullTripMin.toFixed(1)}<small style="font-size:18px;"> דק'</small></span>
+          <span class="kpi-trend">${flightInfo.aircraftName} · ${flightInfo.speed} קמ"ש · הלוך+צניחה+המשך+חזרה</span>
+        </div>
+        <div class="kpi-card glass">
+          <span class="kpi-label">זמן הדגמה נוכחי</span>
+          <span class="kpi-value green">${settings.aircraft_demo_seconds}<small style="font-size:18px;"> שניות</small></span>
+          <span class="kpi-trend">מהירות הדגמה: x${realSpeedRatio.toFixed(0)}</span>
+        </div>
+      </div>
+
+      <div class="panel glass" style="margin-bottom: 16px;">
+        <h2>זמן טיסה — מטוסי כיבוי</h2>
+        <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 12px;">
+          זמן הדגמה למסלול מלא: בסיס מגידו → אירוע → צניחת מים → המשך טיסה → בנק → חזרה לבסיס.
+        </p>
+        <div class="slider-row">
+          <input type="range" min="5" max="120" step="1" value="${settings.aircraft_demo_seconds}" id="set-air-secs" class="slider">
+          <input type="number" min="5" max="600" value="${settings.aircraft_demo_seconds}" id="set-air-secs-num" class="form-input slider-num">
+          <span class="slider-unit">שניות</span>
+        </div>
+        <div class="slider-help">
+          <button class="btn-ghost" data-preset="air-5">⚡ הדגמה מהירה (5s)</button>
+          <button class="btn-ghost" data-preset="air-25">🎮 ברירת מחדל (25s)</button>
+          <button class="btn-ghost" data-preset="air-60">🐢 איטי (60s)</button>
+          <button class="btn-ghost" data-preset="air-real">📏 ריאלי (${Math.round(flightInfo.fullTripMin * 60)}s)</button>
+        </div>
+      </div>
+
+      <div class="panel glass">
+        <h2>זמן נסיעה — רכבי כיבוי קרקעיים (AVL)</h2>
+        <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 12px;">
+          זמן הדגמה לכבאית/רכב פיקוד מהתחנה לאירוע. הזמן בריאליסטי בעיר הוא ~5-12 דקות בהתאם לעומס תנועה.
+        </p>
+        <div class="slider-row">
+          <input type="range" min="3" max="60" step="1" value="${settings.ground_demo_seconds}" id="set-ground-secs" class="slider">
+          <input type="number" min="3" max="300" value="${settings.ground_demo_seconds}" id="set-ground-secs-num" class="form-input slider-num">
+          <span class="slider-unit">שניות</span>
+        </div>
+        <div class="slider-help">
+          <button class="btn-ghost" data-preset="ground-4">⚡ מהיר (4s)</button>
+          <button class="btn-ghost" data-preset="ground-12">🎮 ברירת מחדל (12s)</button>
+          <button class="btn-ghost" data-preset="ground-30">🐢 איטי (30s)</button>
+        </div>
+      </div>
+    `;
+
+    function syncSliders(rangeId, numId, key) {
+      const range = document.getElementById(rangeId);
+      const num = document.getElementById(numId);
+      function save(v) {
+        v = parseInt(v) || parseInt(range.min);
+        v = Math.max(parseInt(range.min), Math.min(parseInt(num.max), v));
+        range.value = Math.min(parseInt(range.max), v);
+        num.value = v;
+        FireOpsState.tactical_settings = FireOpsState.tactical_settings || {};
+        FireOpsState.tactical_settings[key] = v;
+        FireOpsApp.saveState();
+      }
+      range.addEventListener('input', e => {
+        num.value = e.target.value;
+        FireOpsState.tactical_settings = FireOpsState.tactical_settings || {};
+        FireOpsState.tactical_settings[key] = parseInt(e.target.value);
+      });
+      range.addEventListener('change', e => save(e.target.value));
+      num.addEventListener('change', e => save(e.target.value));
+    }
+    syncSliders('set-air-secs', 'set-air-secs-num', 'aircraft_demo_seconds');
+    syncSliders('set-ground-secs', 'set-ground-secs-num', 'ground_demo_seconds');
+
+    body.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [kind, val] = btn.dataset.preset.split('-');
+        let v = parseInt(val);
+        if (val === 'real') v = Math.round(flightInfo.fullTripMin * 60);
+        FireOpsState.tactical_settings = FireOpsState.tactical_settings || {};
+        const key = kind === 'air' ? 'aircraft_demo_seconds' : 'ground_demo_seconds';
+        FireOpsState.tactical_settings[key] = v;
+        FireOpsApp.saveState();
+        render();
+        FireOpsApp.toast(`✓ ${kind === 'air' ? 'זמן טיסה' : 'זמן נסיעה'} עודכן ל-${v}s`, 'success');
+      });
+    });
   }
 
   // === Stations tab ===

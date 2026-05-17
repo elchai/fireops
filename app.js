@@ -244,9 +244,27 @@ window.FireOpsApp = (function() {
   }
 
   // === Init ===
+  function wireSoundToggle() {
+    const btn = document.getElementById('sound-toggle');
+    if (!btn) return;
+    function update() {
+      const on = FireOpsSounds.isEnabled();
+      btn.classList.toggle('active', on);
+      btn.textContent = on ? '🔊' : '🔇';
+      btn.title = on ? 'צליל מופעל · לחץ לכיבוי' : 'צליל מכובה · לחץ להפעלה';
+    }
+    btn.addEventListener('click', () => {
+      FireOpsSounds.setEnabled(!FireOpsSounds.isEnabled());
+      update();
+      toast(FireOpsSounds.isEnabled() ? '🔊 צליל הופעל' : '🔇 צליל כובה');
+    });
+    update();
+  }
+
   async function init() {
     loadState();
     loadAuth();
+    FireOpsSounds.loadPref();
     await FireOpsFirebase.init();
 
     startClock();
@@ -260,6 +278,7 @@ window.FireOpsApp = (function() {
     });
 
     wireNav();
+    wireSoundToggle();
 
     if (currentUser) {
       currentStationId = currentUser.stationId || FireOpsState.stations[0]?.id;

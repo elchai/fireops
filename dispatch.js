@@ -251,13 +251,14 @@ window.FireOpsDispatch = (function() {
     }, 1000);
 
     // Tactical: auto-dispatch units from station with AVL animation
+    // (timing controlled by Settings → Tactical → ground_demo_seconds)
     setTimeout(() => {
       if (!window.FireOpsTactical || !station) return;
       const from = [station.lat, station.lng];
       const to = [newIncident.lat, newIncident.lng];
       FireOpsApp.logEvent('dispatch', 2, `הזנקה אוטומטית: כב-2 · פיק-1 → אירוע #${newId}`);
-      FireOpsTactical.dispatchVehicle({ callsign: 'כב-2' }, from, to, { duration: 10000 });
-      setTimeout(() => FireOpsTactical.dispatchVehicle({ callsign: 'פיק-1' }, from, to, { duration: 12000 }), 1500);
+      FireOpsTactical.dispatchVehicle({ callsign: 'כב-2' }, from, to);
+      setTimeout(() => FireOpsTactical.dispatchVehicle({ callsign: 'פיק-1' }, from, to), 1500);
     }, 2400);
 
     renderIncidents();
