@@ -60,6 +60,9 @@ window.FireOpsDispatch = (function() {
 
     placeStationMarker();
     renderMarkers();
+
+    // Hand the map to the tactical overlay for fire spread / AVL / aircraft
+    if (window.FireOpsTactical) FireOpsTactical.setMap(map);
   }
 
   function placeStationMarker() {
@@ -238,11 +241,24 @@ window.FireOpsDispatch = (function() {
 
     map.flyTo([newIncident.lat, newIncident.lng], 15, { duration: 1.5 });
     FireOpsSounds.incidentReceived();
+    FireOpsApp.logEvent('incident', 1, `📞 דיווח: ${tmpl.type} · ${tmpl.address}`);
 
     setTimeout(() => {
       const m = makeIncidentMarker(newIncident);
       m.openPopup();
+      // Tactical: start fire spread polygon
+      if (window.FireOpsTactical) FireOpsTactical.startFireSpread(newIncident);
     }, 1000);
+
+    // Tactical: auto-dispatch units from station with AVL animation
+    setTimeout(() => {
+      if (!window.FireOpsTactical || !station) return;
+      const from = [station.lat, station.lng];
+      const to = [newIncident.lat, newIncident.lng];
+      FireOpsApp.logEvent('dispatch', 2, `הזנקה אוטומטית: כב-2 · פיק-1 → אירוע #${newId}`);
+      FireOpsTactical.dispatchVehicle({ callsign: 'כב-2' }, from, to, { duration: 10000 });
+      setTimeout(() => FireOpsTactical.dispatchVehicle({ callsign: 'פיק-1' }, from, to, { duration: 12000 }), 1500);
+    }, 2400);
 
     renderIncidents();
     const firstCard = document.querySelector('.incident-card');
@@ -251,11 +267,23 @@ window.FireOpsDispatch = (function() {
     FireOpsApp.toast(`🚨 אירוע חדש #${newId} — ${tmpl.type}`);
   }
 
+  function callAirSupport(level = 'standard') {
+    const incidents = getVisibleIncidents();
+    const active = incidents.find(i => i.active) || incidents[0];
+    if (!active) {
+      FireOpsApp.toast('⚠ אין אירוע פעיל. דווח על אירוע חדש קודם', 'warning');
+      return;
+    }
+    if (window.FireOpsTactical) FireOpsTactical.dispatchAirSupport(active, level);
+  }
+
   function wireEvents() {
     document.getElementById('btn-new-incident').addEventListener('click', spawnDemoIncident);
-    document.getElementById('btn-op-log').addEventListener('click', () => {
-      FireOpsApp.toast('📋 יומן מבצעי — Phase 6');
-    });
+    document.getElementById('btn-op-log').addEventListener('click', () => FireOpsApp.navigateTo('op-log'));
+    const air = document.getElementById('btn-air-support');
+    if (air) air.addEventListener('click', () => callAirSupport('standard'));
+    const heavy = document.getElementById('btn-air-heavy');
+    if (heavy) heavy.addEventListener('click', () => callAirSupport('heavy'));
   }
 
   function onStationChange() {
@@ -268,5 +296,5 @@ window.FireOpsDispatch = (function() {
     renderAll();
   }
 
-  return { init, renderAll, spawnDemoIncident, onStationChange };
+  return { init, renderAll, spawnDemoIncident, callAirSupport, onStationChange };
 })();

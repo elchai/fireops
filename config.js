@@ -52,6 +52,18 @@ const CONFIG = {
     station_chief:     { name_he: 'מפקד תחנה',     level: 5 }
   },
 
+  // בסיסי טייסות כיבוי אווירי (Air Tactical Group)
+  AIRBASES: [
+    { id: 'megiddo', name: 'בסיס מגידו', squadron: 'טייסת 24 "הצופים"', lat: 32.5953, lng: 35.2358, aircraft_count: 14 }
+  ],
+
+  // סוגי מטוסי כיבוי
+  AIRCRAFT_TYPES: [
+    { key: 'at802',   name_he: 'AT-802F "אווירון"',    icon: '✈️', capacity_l: 800,  speed_kmh: 250 },
+    { key: 'bell412', name_he: 'מסוק Bell 412',        icon: '🚁', capacity_l: 1200, speed_kmh: 220 },
+    { key: 'cl415',   name_he: 'CL-415 Super Scooper', icon: '✈️', capacity_l: 6100, speed_kmh: 360 }
+  ],
+
   // תחנות ברירת מחדל (יישמרו ב-LocalStorage ב-init אם לא קיימות)
   DEFAULT_STATIONS: [
     { id: 'haifa-central',  name: 'חיפה — מרכז',   region: 'חיפה',     lat: 32.8190, lng: 34.9885 },
