@@ -22,10 +22,10 @@
   --text: #E8EBF0;
   --text-dim: #8A93A6;
   --text-bright: #FFFFFF;
-  --font-display: 'Orbitron', 'Heebo', sans-serif;
-  --font-ui: 'Rajdhani', 'Heebo', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Heebo', 'Rajdhani', sans-serif;
+  --font-display: 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-ui: 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-mono: 'Consolas', 'Courier New', monospace;
+  --font-body: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
