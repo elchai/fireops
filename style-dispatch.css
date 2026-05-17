@@ -1,0 +1,393 @@
+/* ============================================================
+   FireOps — Dispatch View Styles
+   Layout, incident card, unit card, map markers, leaflet overrides
+   ============================================================ */
+
+/* === Dispatch page layout === */
+.page-dispatch.active {
+  display: grid;
+  grid-template-columns: 360px 1fr 340px;
+  gap: 12px;
+  height: 100%;
+}
+
+@media (max-width: 1280px) {
+  .page-dispatch.active {
+    grid-template-columns: 300px 1fr 280px;
+  }
+}
+
+/* === Incident Card === */
+.incident-card {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,107,53,0.12);
+  border-right: 3px solid var(--fire);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.incident-card.severity-1 { border-right-color: var(--red); }
+.incident-card.severity-2 { border-right-color: var(--fire); }
+.incident-card.severity-3 { border-right-color: var(--yellow); }
+.incident-card.severity-4 { border-right-color: var(--cyan); }
+
+.incident-card:hover {
+  border-color: var(--border-hover);
+  background: rgba(255, 69, 0, 0.06);
+  transform: translateX(-3px);
+  box-shadow: -8px 0 26px rgba(255,69,0,0.18);
+}
+
+.incident-card.active::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 8px;
+  border: 1px solid var(--fire);
+  pointer-events: none;
+  animation: cardPulse 2s ease-in-out infinite;
+}
+
+@keyframes cardPulse {
+  0%, 100% { opacity: 0.3; box-shadow: inset 0 0 0 rgba(255,69,0,0); }
+  50% { opacity: 1; box-shadow: inset 0 0 24px rgba(255,69,0,0.25); }
+}
+
+.incident-card .id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.incident-card .type {
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-top: 3px;
+}
+
+.incident-card .address {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 5px;
+}
+
+.incident-card .meta {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.incident-card .units-deployed {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+
+.unit-chip {
+  background: rgba(255,69,0,0.15);
+  border: 1px solid rgba(255,69,0,0.4);
+  color: var(--fire-soft);
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.sev-tag {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(255,46,46,0.15);
+  border: 1px solid rgba(255,46,46,0.4);
+  color: var(--red);
+}
+
+.severity-3 .sev-tag { background: rgba(255,210,63,0.12); border-color: rgba(255,210,63,0.4); color: var(--yellow); }
+.severity-4 .sev-tag { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.4); color: var(--cyan); }
+
+.incident-card.spawn-in {
+  animation: spawnCard 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spawnCard {
+  0% { transform: translateX(-120%) scale(0.7); opacity: 0; }
+  50% { transform: translateX(12px) scale(1.04); opacity: 1; box-shadow: 0 0 40px rgba(255,69,0,0.9); }
+  100% { transform: translateX(0) scale(1); box-shadow: 0 0 12px rgba(255,69,0,0.2); }
+}
+
+/* === Map === */
+.map-section {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  animation: fadeUp 0.6s ease-out 0.3s both;
+  background: var(--bg-2);
+}
+
+#map { position: absolute; inset: 0; background: var(--bg-2); }
+
+.leaflet-container { background: var(--bg-2); font-family: var(--font-body); }
+
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  opacity: 0.4 !important;
+  background: rgba(0,0,0,0.6) !important;
+  color: var(--text-dim) !important;
+}
+.leaflet-control-attribution a { color: var(--text-dim) !important; }
+
+.leaflet-control-zoom { border: none !important; box-shadow: none !important; }
+
+.leaflet-control-zoom a {
+  background: var(--glass-strong) !important;
+  backdrop-filter: blur(20px);
+  color: var(--fire) !important;
+  border: 1px solid var(--border) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  width: 32px !important; height: 32px !important; line-height: 32px !important;
+  margin-bottom: 4px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(255,69,0,0.18) !important;
+  color: var(--fire-glow) !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 0 12px rgba(255,69,0,0.3) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--glass-strong) !important;
+  backdrop-filter: blur(20px);
+  color: var(--text) !important;
+  border: 1px solid var(--fire) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 30px rgba(255,69,0,0.4) !important;
+}
+.leaflet-popup-content { margin: 12px 14px !important; line-height: 1.4; }
+.leaflet-popup-tip { background: var(--glass-strong) !important; border: 1px solid var(--fire) !important; }
+.leaflet-popup-close-button {
+  color: var(--text-dim) !important;
+  font-size: 20px !important;
+  padding: 6px !important;
+}
+
+.map-overlay-top {
+  position: absolute;
+  top: 16px; right: 16px; left: 16px;
+  display: flex; gap: 12px; justify-content: flex-end;
+  z-index: 500;
+  pointer-events: none;
+}
+
+.overlay-stat {
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  pointer-events: auto;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 130px;
+  position: relative;
+  overflow: hidden;
+}
+
+.overlay-stat::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+
+.overlay-stat .label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+}
+
+.overlay-stat .value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(0,212,255,0.4);
+}
+
+/* === Map markers (custom HTML icons) === */
+.fire-marker {
+  position: relative;
+  width: 24px; height: 24px;
+}
+
+.fire-marker .dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px; height: 14px;
+  background: var(--red);
+  border-radius: 50%;
+  box-shadow: 0 0 16px var(--red), 0 0 32px rgba(255,46,46,0.8);
+  z-index: 3;
+}
+
+.fire-marker .ring {
+  position: absolute; inset: 0;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(255,46,46,0.6);
+}
+
+.fire-marker .pulse-ring {
+  position: absolute; inset: -6px;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  animation: pulseRing 2.4s ease-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.fire-marker .pulse-ring:nth-child(2) { animation-delay: 0.8s; }
+.fire-marker .pulse-ring:nth-child(3) { animation-delay: 1.6s; }
+
+@keyframes pulseRing {
+  0% { transform: scale(0.8); opacity: 1; border-width: 3px; }
+  100% { transform: scale(4.5); opacity: 0; border-width: 1px; }
+}
+
+.fire-marker.resolved .dot { background: var(--yellow); box-shadow: 0 0 12px var(--yellow); }
+.fire-marker.resolved .ring { border-color: var(--yellow); }
+.fire-marker.resolved .pulse-ring { display: none; }
+
+.station-marker {
+  position: relative;
+  width: 30px; height: 30px;
+}
+
+.station-marker .shape {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, var(--cyan), #0099cc);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 20px rgba(0,212,255,0.8);
+}
+
+.station-marker .letter {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 13px;
+  color: #001a26;
+}
+
+/* === Unit Card === */
+.unit-card {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,212,255,0.1);
+  border-right: 3px solid var(--green);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.unit-card.status-dispatched { border-right-color: var(--yellow); }
+.unit-card.status-onscene { border-right-color: var(--red); }
+.unit-card.status-oos { border-right-color: var(--text-dim); opacity: 0.55; }
+
+.unit-card:hover {
+  border-color: rgba(0,212,255,0.4);
+  background: rgba(0, 212, 255, 0.05);
+  transform: translateX(-3px);
+  box-shadow: -6px 0 18px rgba(0,212,255,0.15);
+}
+
+.unit-card .row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.unit-card .callsign {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-bright);
+  letter-spacing: 1.5px;
+}
+
+.unit-card .led {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+}
+
+.unit-card.status-dispatched .led { background: var(--yellow); box-shadow: 0 0 10px var(--yellow); animation: blink 1s infinite; }
+.unit-card.status-onscene .led { background: var(--red); box-shadow: 0 0 10px var(--red); animation: blink 0.6s infinite; }
+.unit-card.status-oos .led { background: var(--text-dim); box-shadow: none; }
+
+.unit-card .type-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.unit-card .status-text {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.unit-card.status-available .status-text { color: var(--green); }
+.unit-card.status-dispatched .status-text { color: var(--yellow); }
+.unit-card.status-onscene .status-text { color: var(--red); }
+.unit-card.status-oos .status-text { color: var(--text-dim); }
+
+.unit-card .staffing {
+  margin-top: 8px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.unit-card .meter {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.unit-card .meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--cyan-glow));
+  box-shadow: 0 0 8px var(--cyan);
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+}
+
+/* === Empty state === */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: var(--font-ui);
+}
