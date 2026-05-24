@@ -63,6 +63,20 @@ window.FireOpsDispatch = (function() {
 
     // Hand the map to the tactical overlay for fire spread / AVL / aircraft
     if (window.FireOpsTactical) FireOpsTactical.setMap(map);
+
+    // Keep map sized correctly on viewport resize (mobile rotate / drawer toggle)
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => { if (map) map.invalidateSize(); }, 300);
+    });
+  }
+
+  function invalidateMapSize() {
+    if (map) setTimeout(() => map.invalidateSize(), 50);
   }
 
   function placeStationMarker() {
@@ -297,5 +311,5 @@ window.FireOpsDispatch = (function() {
     renderAll();
   }
 
-  return { init, renderAll, spawnDemoIncident, callAirSupport, onStationChange };
+  return { init, renderAll, spawnDemoIncident, callAirSupport, onStationChange, invalidateMapSize };
 })();

@@ -17,6 +17,104 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .page-dispatch.active {
+    grid-template-columns: 260px 1fr 240px;
+    gap: 8px;
+  }
+}
+
+/* === Mobile: stack dispatch sections vertically === */
+@media (max-width: 768px) {
+  .page-dispatch.active {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+    height: auto;
+  }
+
+  .incidents-panel, .units-panel {
+    max-height: none;
+  }
+
+  .incidents-panel .scroll-area,
+  .units-panel .scroll-area {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .map-section {
+    height: 340px;
+    min-height: 280px;
+    border-radius: 10px;
+    order: -1;  /* show map first on mobile for context */
+  }
+
+  .map-overlay-top {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .overlay-stat {
+    padding: 6px 10px;
+    min-width: 0;
+    flex: 1 1 calc(33% - 4px);
+  }
+
+  .overlay-stat .label { font-size: 9px; letter-spacing: 1px; }
+  .overlay-stat .value { font-size: 16px; }
+
+  /* Wind widget — shrink on mobile */
+  .wind-widget {
+    top: 8px;
+    left: 8px;
+    padding: 6px 10px 6px 6px;
+    gap: 8px;
+  }
+
+  .wind-widget .wind-info { min-width: 60px; }
+  .wind-widget .wind-value { font-size: 12px; }
+  .wind-widget .wind-speed { font-size: 9px; }
+
+  /* Cards — more compact */
+  .incident-card { padding: 10px; }
+  .incident-card .type { font-size: 15px; }
+  .incident-card .address { font-size: 12px; }
+  .incident-card .meta { font-size: 10px; }
+
+  .unit-card { padding: 10px; }
+  .unit-card .callsign { font-size: 14px; }
+  .unit-card .status-text { font-size: 12px; }
+
+  /* Dispatch action buttons — keep 2-col but smaller */
+  .dispatch-actions { gap: 6px; }
+  .btn-aircraft { height: 40px; font-size: 11px; letter-spacing: 1px; padding: 0 8px; }
+
+  /* Leaflet zoom controls — bigger touch target */
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .map-section { height: 280px; }
+
+  .overlay-stat {
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  .incidents-panel .scroll-area,
+  .units-panel .scroll-area {
+    max-height: 300px;
+  }
+}
+
 /* === Incident Card === */
 .incident-card {
   background: rgba(0,0,0,0.35);

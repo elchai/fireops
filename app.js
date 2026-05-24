@@ -154,16 +154,61 @@ window.FireOpsApp = (function() {
       const mod = modGetter();
       if (mod && mod.init) mod.init();
     }
+
+    if (page === 'dispatch' && window.FireOpsDispatch?.invalidateMapSize) {
+      FireOpsDispatch.invalidateMapSize();
+    }
   }
 
   function wireNav() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const page = btn.dataset.page;
-        if (!page || currentPage === page) return;
+        if (!page || currentPage === page) {
+          closeDrawer();
+          return;
+        }
         FireOpsSounds.uiClick();
         navigateTo(page);
+        closeDrawer();
       });
+    });
+  }
+
+  // === Mobile drawer (hamburger menu) ===
+  function openDrawer() {
+    document.getElementById('sidebar')?.classList.add('open');
+    document.getElementById('drawer-backdrop')?.classList.add('visible');
+    document.getElementById('hamburger-btn')?.classList.add('open');
+    document.getElementById('hamburger-btn')?.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('drawer-open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('drawer-backdrop')?.classList.remove('visible');
+    document.getElementById('hamburger-btn')?.classList.remove('open');
+    document.getElementById('hamburger-btn')?.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('drawer-open');
+  }
+
+  function wireDrawer() {
+    const btn = document.getElementById('hamburger-btn');
+    const backdrop = document.getElementById('drawer-backdrop');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const isOpen = document.getElementById('sidebar')?.classList.contains('open');
+        if (isOpen) closeDrawer(); else openDrawer();
+        FireOpsSounds.uiClick();
+      });
+    }
+    if (backdrop) backdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDrawer();
+    });
+    // Auto-close on resize to desktop
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) closeDrawer();
     });
   }
 
@@ -278,6 +323,7 @@ window.FireOpsApp = (function() {
     });
 
     wireNav();
+    wireDrawer();
     wireSoundToggle();
 
     if (currentUser) {
